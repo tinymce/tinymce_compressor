@@ -1,13 +1,17 @@
 <?php
 /**
- * $Id: tiny_mce_gzip.php 315 2007-10-25 14:03:43Z spocke $
+ * tiny_mce_gzip.php
  *
- * @author Moxiecode
- * @copyright Copyright © 2005-2006, Moxiecode Systems AB, All rights reserved.
+ * Copyright 2009, Moxiecode Systems AB
+ * Released under LGPL License.
+ *
+ * License: http://tinymce.moxiecode.com/license
+ * Contributing: http://tinymce.moxiecode.com/contributing
  *
  * This file compresses the TinyMCE JavaScript using GZip and
  * enables the browser to do two requests instead of one for each .js file.
- * Notice: This script defaults the button_tile_map option to true for extra performance.
+ *
+ * It's a good idea to use the diskcache option since it reduces the servers workload.
  */
 
 	// Set the error reporting to minimal.

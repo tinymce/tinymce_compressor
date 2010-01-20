@@ -1,14 +1,17 @@
 <%@ Page Language="C#" %>
 <%@ Import Namespace="System.IO" %>
+<%@ Import Namespace="System.IO.Compression" %>
 <%@ Import Namespace="System.Security.Cryptography" %>
 <%@ Import Namespace="System.Text.RegularExpressions" %>
-<%@ Import Namespace="ICSharpCode.SharpZipLib.GZip" %>
 <%
 /**
- * $Id: tiny_mce_gzip.aspx 316 2007-10-25 14:50:55Z spocke $
+ * tiny_mce_gzip.aspx
  *
- * @author Moxiecode
- * @copyright Copyright © 2006, Moxiecode Systems AB, All rights reserved.
+ * Copyright 2009, Moxiecode Systems AB
+ * Released under LGPL License.
+ *
+ * License: http://tinymce.moxiecode.com/license
+ * Contributing: http://tinymce.moxiecode.com/contributing
  *
  * This file compresses the TinyMCE JavaScript using GZip and
  * enables the browser to do two requests instead of one for each .js file.
@@ -19,8 +22,8 @@
 	string cacheKey = "", cacheFile = "", content = "", enc, suffix, cachePath;
 	string[] plugins, languages, themes;
 	bool diskCache, supportsGzip, isJS, compress, core;
-	int i, x, bytes, expiresOffset;
-	GZipOutputStream gzipStream;
+	int i, x, expiresOffset;
+    GZipStream gzipStream;
 	Encoding encoding = Encoding.GetEncoding("windows-1252");
 	byte[] buff;
 
@@ -138,7 +141,7 @@
 		if (diskCache && cacheKey != "") {
 			// Gzip compress
 			if (compress) {
-				gzipStream = new GZipOutputStream(File.Create(cacheFile));
+                gzipStream = new GZipStream(File.Create(cacheFile), CompressionMode.Compress, true);
 				buff = encoding.GetBytes(content.ToCharArray());
 				gzipStream.Write(buff, 0, buff.Length);
 				gzipStream.Close();
@@ -151,7 +154,7 @@
 			// Write to stream
 			Response.WriteFile(cacheFile);
 		} else {
-			gzipStream = new GZipOutputStream(Response.OutputStream);
+            gzipStream = new GZipStream(Response.OutputStream, CompressionMode.Compress, true);
 			buff = encoding.GetBytes(content.ToCharArray());
 			gzipStream.Write(buff, 0, buff.Length);
 			gzipStream.Close();
