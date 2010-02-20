@@ -2,6 +2,7 @@
 use strict;
 use warnings FATAL => 'all', NONFATAL => 'redefine';
 
+
 ###################################################
 #
 #  @author Clinton Gormley
@@ -223,3 +224,146 @@ sub generate_and_cache_data {
 
 1;
 
+=head1 NAME
+
+TinyMCE Compressor Perl version 2.0.3
+
+=head1 DESCRIPTION
+
+TinyMCE Compressor gzips all javascript files in TinyMCE to a single
+streamable file. This makes the overall download size 75% smaller and
+the number of requests will also be reduced. The overall initialisation
+time for TinyMCE will be reduced dramatically if you use this script.
+
+The Perl fork of the TinyMCE compressor project page is at
+L<http://github.com/clintongormley/tinymce_compressor>
+
+=head2 Installation
+
+Here is a step by step list on how to install the GZip compressor.
+
+=over
+
+=item Prerequisites
+
+Use CPAN to install L<File::Spec>, L<File::Slurp>,
+L<Digest::MD5> and L<Compress::Zlib>.
+
+=item Installing files
+
+Copy the tiny_mce_gzip.js and tiny_mce_gzip.pl to the tiny_mce
+directory. The same directory that contains the tiny_mce.js file.
+
+=item Create a cache directory
+
+Create the sub directory 'C<cache>' under your tiny_mce
+directory and give your web server permission to write to it, eg:
+
+        cd /path/to/tinymce
+        mkdir cache
+        chown apache cache
+        chmod u+rwx,og-rwx cache
+
+
+B<PLEASE NOTE:> If you upgrade your Tiny MCE editor, you will need to
+clear out the cache directory.
+
+=item Update your code
+
+Remove the current script tag:
+
+    <script type="text/javascript" src="tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
+
+And replace it with:
+
+    <script type="text/javascript" src="tinymce/jscripts/tiny_mce/tiny_mce_gzip.js"></script>
+
+Add the new GZip initialization call (see below) that will
+tell the compressor what to include in the output. This should be the
+sum of all themes, plugins and languages contained on page.
+
+=back
+
+=head2 Running under mod_perl
+
+You either need to set up your web server to execute
+C<tiny_mce_gzip.pl> as a CGI script, or you can configure Apache to run
+it under mod_perl, which will greatly speed up the response.
+
+To do this, you could use a configuration like this:
+
+    <Location /tiny_mce/tiny_mce_gzip.pl>
+        SetHandler perl-script
+        PerlResponseHandler ModPerl::Registry
+        PerlOptions +ParseHeaders
+        Options +ExecCGI
+        Order allow,deny
+        Allow from all
+    </Location>
+
+=head2 Example of configuration
+
+The example below will pack both themes and all plugins into one
+file/stream. Remove the things you don't need or add you custom plugins
+to the settings below. Remember that the tinyMCE_GZ.init call must be
+placed in B<it's own script tag.>
+
+    <script type="text/javascript" src="tinymce/jscripts/tiny_mce/tiny_mce_gzip.js"></script>
+    <script type="text/javascript">
+        tinyMCE_GZ.init({
+            plugins     : 'style,layer,...etc',
+            themes      : 'simple,advanced',
+            languages   : 'en',
+            disk_cache  : true
+        });
+    </script>
+
+    <!-- Needs to be seperate script tags! -->
+
+    <script type="text/javascript">
+        tinyMCE.init({
+            .. your normal init ..
+        });
+    </script>
+
+=head2 Troubleshooting
+
+=over
+
+=item *
+
+The GZip compressor can fail to load if the server has odd settings or
+is missing the required support for it to function. To see compilation
+errors or other problems we suggest that you use HTTP debugging tools
+like HTTP Fiddler or, in Firefox, the Firebug addon, or point you
+browser directly to the GZip file.
+
+=item *
+
+Consult the changelog of this script and make sure that you use the
+latest version of TinyMCE. These two parts are pretty much tied
+together so there is no guarantee that it will work with older versions
+of TinyMCE.
+
+=back
+
+Visit the TinyMCE forum for help with the TinyMCE Gzip Compressor.
+
+=head2 Changelog and Bugs
+
+See the ChangeLog here : changelog.txt
+
+Please report any bugs that you find to clint@traveljury.com
+
+=head2 License notice
+
+The perl part of this library has been written by Clinton Gormley
+(clint@traveljury.com).
+
+The javascript part has been taken from the PHP compressor available at
+MoxieCode.
+
+This library is under LGPL license but it uses the zlib library, which
+is free to use in commercial applications. (Read the zlib licence).
+
+=cut

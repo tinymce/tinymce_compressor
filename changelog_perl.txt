@@ -1,5 +1,6 @@
 Version 2.0.3   (2010-02-20)
     Added to the main tinymce_compressor github repo
+    Moved the docs in README into POD in tiny_mce_gzip.pl itself
 
 Version 2.0.2   (2008-12-23)
     Tested with TinyMCE version 3.2.1.1
