@@ -1,12 +1,12 @@
-Version 2.0.3   (2010-02-20)
+Version 2.0.3 (2010-02-20)
     Added to the main tinymce_compressor github repo
     Moved the docs in README into POD in tiny_mce_gzip.pl itself
 
-Version 2.0.2   (2008-12-23)
+Version 2.0.2 (2008-12-23)
     Tested with TinyMCE version 3.2.1.1
     Updated the tiny_mce_gzip.js from the PHP compressor version 2.0.2
 
-Version 2.0.0   (2008-03-28)
+Version 2.0.0 (2008-03-28)
     Tested with TinyMCE version 3.0.5
 
     Updated the tiny_mce_gzip.js from the PHP compressor version 2.0.1
@@ -14,7 +14,7 @@ Version 2.0.0   (2008-03-28)
     custom_files were not being included - fixed
     Added the 'charset' parameter - not supported by the JS file
 
-Version 1.0.3   (2007-07-14)
+Version 1.0.3 (2007-07-14)
     Tested with TinyMCE version 2.1.1
 
     The get_params() sub now accepts capital letters, not just lower case.
@@ -28,12 +28,11 @@ Version 1.0.3   (2007-07-14)
 
     IE7 now tries the native XMLHttpRequest first.
 
-Version 1.0.2   (2007-04-25)
+Version 1.0.2 (2007-04-25)
     The 'compress' option now defaults to true, as per the original
     PHP compressor. (Reported by Nicholas Oxhøj)
 
-Version 1.0.1   (2007-04-19)
-
+Version 1.0.1 (2007-04-19)
     Tested with TinyMCE version 2.1.0
 
     Fixed two bugs in the TinyMCE Perl compressor:
@@ -41,8 +40,7 @@ Version 1.0.1   (2007-04-19)
        lists were not being recognised
      - some plugins do not need language packs (eg inlinepopup)
 
-Version 1.0     (2007-03-14)
-
+Version 1.0 (2007-03-14)
     First release of the Perl version of the TinyMCE compressor by Clinton Gormley.
     This release is based on the code from the PHP version of the compressor.
 
