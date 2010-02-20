@@ -14,23 +14,27 @@ In the root directory of TinyMCE Compresor where the build.xml file is you can r
 
 `ant`
 
-Will build release packages for all compressor types jsp, php, .Net, cf.
+Will build release packages for all compressor types jsp, php, .Net, cf, perl.
 
 `ant jsp`
 
-Will generate the a release package for the jsp version.
+Will generate a release package for the jsp version.
 
 `ant php`
 
-Will generate the a release package for the php version.
+Will generate a release package for the php version.
 
 `ant net`
 
-Will generate the a release package for the net version.
+Will generate a release package for the net version.
 
 `ant cf`
 
 Will generate the a release package for the cf version.
+
+`ant perl`
+
+Will generate the a release package for the perl version.
 
 Contributing to the TinyMCE Compressor project
 -----------------------------------------------
