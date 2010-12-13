@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="TinyMCE" default="all" basedir=".">
+<project name="TinyMCE_Compressor" default="all" basedir=".">
     <property description="Temp directory" name="temp_dir" value="tmp" />
     <property description="Compressor type" name="type" value="php" />
 
