@@ -153,7 +153,7 @@ class TinyMCE_Compressor {
 		}
 
 		// Set base URL for where tinymce is loaded from
-		$buffer = "var tinyMCEPreInit={base:'" . dirname($_SERVER["SCRIPT_NAME"]) . "'};";
+		$buffer = "var tinyMCEPreInit={base:'" . dirname($_SERVER["SCRIPT_NAME"]) . "',suffix:''};";
 
 		// Load all tinymce script files into buffer
 		foreach ($files as $file)
