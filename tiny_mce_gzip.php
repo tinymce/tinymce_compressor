@@ -202,7 +202,7 @@ class TinyMCE_Compressor {
 		if (isset($settings["disk_cache"]))
 			$scriptSrc .= "&diskcache=" . ($settings["disk_cache"] === true ? "true" : "false");
 
-		echo '<script type="text/javascript" src="' . $scriptSrc . '"></script>';
+		echo '<script type="text/javascript" src="' . htmlspecialchars($scriptSrc) . '"></script>';
 	}
 
 	/**
