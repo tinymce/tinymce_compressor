@@ -1,4 +1,4 @@
-Version 2.0.3 (2008-xx-xx)
+Version 2.0.3 (2010-12-16)
 	Fixed so tinyMCEPreInit can be used if .gz loader script is loaded from another location.
 	Fixed issues with code evaluation, it's now using a better method.
 Version 2.0.2 (2008-07-09)

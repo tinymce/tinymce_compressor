@@ -1,4 +1,4 @@
-Version 2.1.1.1 (2009-03-xx)
+Version 2.1.1.1 (2010-12-16)
 	Fixed issues with code evaluation, it's now using a better method.
 Version 2.1.1 (2009-03-03)
 	Added HTTP headers when serving the files.
