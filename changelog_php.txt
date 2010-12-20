@@ -1,4 +1,4 @@
-Version 2.0.3 (2010-12-16)
+Version 2.0.3 (2010-12-20)
 	Rewrote the tiny_mce_gzip.php file to support a direct loading method without needing the tiny_mce_gzip.js.
 	Fixed so tinyMCEPreInit can be used if .gz loader script is loaded from another location.
 	Fixed issues with code evaluation, it's now using a better method.
