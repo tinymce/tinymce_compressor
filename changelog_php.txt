@@ -1,3 +1,8 @@
+Version 2.0.3 (2011-xx-xx)
+	Added new files option with custom files to add into compression from page level or by config. Contributed by TerryE.
+	Added better detection for existing gzip compression output. Contributed by TerryE.
+	Added extra parameter to renderTag so that it can be used in templates where it needs to be a string. Contributed by TerryE.
+	Reintroduced the source option as query string argument and config option. Contributed by TerryE.
 Version 2.0.3 (2010-12-20)
 	Rewrote the tiny_mce_gzip.php file to support a direct loading method without needing the tiny_mce_gzip.js.
 	Fixed so tinyMCEPreInit can be used if .gz loader script is loaded from another location.
