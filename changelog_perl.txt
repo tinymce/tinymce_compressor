@@ -1,3 +1,6 @@
+Version 2.0.4  (2011-xx-xx)
+	Fixed bug where the eval function of the tiny_mce_gzip.js file wouldn't execute properly if scripts where loaded before the body.
+
 Version 2.0.3 (2010-02-20)
     Added to the main tinymce_compressor github repo
     Moved the docs in README into POD in tiny_mce_gzip.pl itself
