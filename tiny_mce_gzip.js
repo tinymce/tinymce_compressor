@@ -131,7 +131,7 @@ var tinyMCE_GZ = {
 		se.text = co;
 
 		// Add it to evaluate it and remove it
-		document.body.appendChild(se);
+		(document.getElementsByTagName('head')[0] || document.documentElement).appendChild(se);
 		se.parentNode.removeChild(se);
 	}
 };

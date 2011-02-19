@@ -1,3 +1,6 @@
+Version 2.0.4 (2010-12-16)
+	Rewrote the gzip compressor to use an ashx file instead of an aspx for performance and conflict issues with themes.
+	Fixed bug where the stream to local gzip files wasn't correctly closed when disk cache was enabled.
 Version 2.0.3 (2010-12-16)
 	Fixed so tinyMCEPreInit can be used if .gz loader script is loaded from another location.
 	Fixed issues with code evaluation, it's now using a better method.

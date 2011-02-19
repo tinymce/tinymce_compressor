@@ -69,7 +69,7 @@
 	<target name="net">
 		<antcall target="build">
 			<param name="type" value="net"/>
-			<param name="ext" value="aspx"/>
+			<param name="ext" value="ashx"/>
 		</antcall>
 	</target>
 
