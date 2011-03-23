@@ -1,4 +1,4 @@
-Version 2.0.4 (2011-xx-xx)
+Version 2.0.4 (2011-03-23)
 	Rewrote the gzip compressor to use an ashx file instead of an aspx for performance and conflict issues with themes.
 	Fixed bug where the stream to local gzip files wasn't correctly closed when disk cache was enabled.
 	Fixed bug where the eval function of the tiny_mce_gzip.js file wouldn't execute properly if scripts where loaded before the body.
