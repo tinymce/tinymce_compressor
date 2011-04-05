@@ -56,6 +56,7 @@ class TinyMCE_Compressor {
 		"suffix"     => "",
 		"files"      => "",
 		"source"     => false,
+		"max_cache"  => 50
 	);
 
 	/**
@@ -172,7 +173,7 @@ class TinyMCE_Compressor {
 		$supportsGzip = $this->settings['compress'] && !empty($encoding) && !$zlibOn && function_exists('gzencode');
 
 		// Set cache file name
-		$cacheFile = $this->settings["cache_dir"] . "/" . $hash . ($supportsGzip ? ".gz" : ".js");
+		$cacheFile = $this->settings["cache_dir"] . "/tinymce_cache_" . $hash . ($supportsGzip ? ".gz" : ".js");
 
  		// Set headers
 		header("Content-type: text/javascript");
@@ -205,12 +206,21 @@ class TinyMCE_Compressor {
 		$buffer .= 'tinymce.each("' . implode(',', $files) . '".split(","),function(f){tinymce.ScriptLoader.markDone(tinyMCE.baseURL+"/"+f+".js");});';
 
 		// Compress data
-		if ($supportsGzip)
+		if ($supportsGzip) {
 			$buffer = gzencode($buffer, 9, FORCE_GZIP);
+		}
 
 		// Write cached file
-		if ($this->settings["disk_cache"])
-			@file_put_contents($cacheFile, $buffer);	
+		if ($this->settings["disk_cache"]) {
+			// List the existing cached files
+			$cacheFiles = glob("tinymce_cache_*");
+
+			// Only put file in cache if the number of cached files is less
+			// than the set max files this will reduce a possible DOS attack
+			if (count($cacheFiles) < $this->settings["max_cache"]) {
+				@file_put_contents($cacheFile, $buffer);
+			}
+		}
 
 		// Stream contents to client
 		echo $buffer;

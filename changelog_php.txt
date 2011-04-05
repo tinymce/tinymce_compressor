@@ -1,3 +1,5 @@
+Version 2.0.5 (2011-xx-xx)
+	Added new max_cache setting that would prevent a malicious script from flooding a server with cached files.
 Version 2.0.4 (2011-03-23)
 	Fixed bug where the eval function of the tiny_mce_gzip.js file wouldn't execute properly if scripts where loaded before the body.
 	Added new files option with custom files to add into compression from page level or by config. Contributed by TerryE.
