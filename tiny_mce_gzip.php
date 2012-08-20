@@ -191,8 +191,14 @@ class TinyMCE_Compressor {
 		}
 
 		// Set base URL for where tinymce is loaded from
-		$buffer = "var tinyMCEPreInit={base:'" . dirname($_SERVER['SERVER_NAME'] . $_SERVER["SCRIPT_NAME"]) . "',suffix:''};";
-
+		$buffer = "";
+		if ($_SERVER['HTTP_X_FORWARDED_HOST']){
+			$buffer = "var tinyMCEPreInit={base:'" . dirname($_SERVER['SERVER_NAME'] . $_SERVER["SCRIPT_NAME"]) . "',suffix:''};";
+		}
+		else {
+			$buffer = "var tinyMCEPreInit={base:'" . dirname( $_SERVER['SCRIPT_NAME']) . "',suffix:''};";
+		}
+		
 		// Load all tinymce script files into buffer
 		foreach ($allFiles as $file) {
 			if ($file) {
