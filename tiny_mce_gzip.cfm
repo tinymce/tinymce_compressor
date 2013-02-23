@@ -1,277 +1,325 @@
+<cfsetting enablecfoutputonly="true" showdebugoutput="false">
 <!---
-//  This file compresses the TinyMCE JavaScript using GZip and enables
-//  the browser to do two requests instead of one for each .js file.
-//  Notice: This script defaults the button_tile_map option to true
-//  for extra performance.
---->
+ * This file combines and compresses the TinyMCE core, plugins, themes and
+ * language packs into one disk cached gzipped request. It improves the loading speed of TinyMCE dramatically but
+ * still provides dynamic initialization.
+ --->
 
-<cfsavecontent variable="credits">
-//  --------------------------------------------------------------------
-//  This file was concatenated (and most likely also cached and gzipped)
-//  by TinyMCE CF GZIP, a ColdFusion based Javascript Concatenater,
-//  Compressor, and Cacher for TinyMCE.
-//  V1, Mon Feb 9 9:00:00 -0500 2009
-//  
-//  Copyright (c) 2009 Jules Gravinese (http://www.webveteran.com/)
-//  
-//  TinyMCE CF GZIP is licensed under LGPL license.
-//  More details can be found here: http://tinymce.moxiecode.com/license.php
-//  
-//  The gzip functions were adapted and incorporated by permission
-//  from Artur Kordowski's Zip CFC 1.2 : http://zipcfc.riaforge.org/
-//</cfsavecontent>
- 
+<!---
+	/*
+	 * Add any site-specific defaults here that you may wish to implement. For example:
+	 *
+	 * 	Variables.Settings.languages = "en";
+	 *  Variables.Settings.cache_dir = expandPath("./tiny_mce_gzip_cache/");
+	 *  Variables.Settings.files = "somescript,anotherscript";
+	 *  Variables.Settings.expires = "1m";
+	 */
+ --->
+
+
+
+
+<!---
+	STATIC CODE
+ --->
+
+<!--- Default Settings --->
+<cfparam name="Variables.Settings.cache_dir" default="#expandPath("./tiny_mce_gzip_cache/")#" type="string">
+<cfparam name="Variables.Settings.compress" default="true" type="string">
+<cfparam name="Variables.Settings.core" default="true" type="string">
+<cfparam name="Variables.Settings.disk_cache" default="true" type="string">
+<cfparam name="Variables.Settings.expires" default="30d" type="string">
+<cfparam name="Variables.Settings.files" default="" type="string">
+<cfparam name="Variables.Settings.js" default="true" type="string">
+<cfparam name="Variables.Settings.languages" default="" type="string">
+<cfparam name="Variables.Settings.max_cache" default="50" type="string">
+<cfparam name="Variables.Settings.plugins" default="" type="string">
+<cfparam name="Variables.Settings.source" default="false" type="string">
+<cfparam name="Variables.Settings.suffix" default="" type="string">
+<cfparam name="Variables.Settings.themes" default="" type="string">
+
+<cfscript>
+	// Override settings with querystring params
+	// js, diskcache, core, suffix, themes, plugins, languages
+
+	Variables.Supplied.js = getParam("js");
+	if (Len(Variables.Supplied.js) GT 0)
+		Variables.Settings.js = (Variables.Supplied.js EQ "true");
+
+	Variables.Supplied.plugins = getParam("plugins");
+	if (Len(Variables.Supplied.plugins) GT 0)
+		Variables.Settings.plugins = Variables.Supplied.plugins;
+	Variables.data.plugins = ListToArray(Variables.Settings.plugins);
+
+	Variables.Supplied.themes = getParam("themes");
+	if (Len(Variables.Supplied.themes) GT 0)
+		Variables.Settings.themes = Variables.Supplied.themes;
+	Variables.data.themes = ListToArray(Variables.Settings.themes);
+
+	Variables.Supplied.languages = getParam("languages");
+	if (Len(Variables.Supplied.languages) GT 0)
+		Variables.Settings.languages = Variables.Supplied.languages;
+	Variables.data.languages = ListToArray(Variables.Settings.languages);
+
+	Variables.Supplied.tagFiles = getParam("files");
+	if (Len(Variables.Supplied.tagFiles) GT 0)
+		Variables.Settings.files = Variables.Supplied.tagFiles;
+	Variables.data.files = ListToArray(Variables.Settings.files);
+
+	Variables.Supplied.diskCache = getParam("diskcache");
+	if (Len(Variables.Supplied.diskCache) GT 0)
+		Variables.Settings.disk_cache = (Variables.Supplied.diskCache EQ "true");
+
+	Variables.Supplied.src = getParam("src");
+	if (Len(Variables.Supplied.src) GT 0)
+		Variables.Settings.source = (Variables.Supplied.src EQ "true");
+</cfscript>
+
+<cfset Variables.expiresOffset = parseTime(Variables.Settings.Expires)>
+<cfset Variables.save_cache = false>
+<cfset Variables.SupportsGzip = false>
+<cfset Variables.LoadedFromBase = Reverse(ListRest(Reverse(CGI.SCRIPT_NAME), "/"))>
+
+<!--- Shall we GZIP? --->
+<cfset Variables.encodings = LCase(CGI.HTTP_ACCEPT_ENCODING)>
+<cfif ListFind(Variables.encodings, "gzip") GT 0>
+	<cfset Variables.encoding = "gzip">
+<cfelseif ListFind(Variables.encodings, "x-gzip") GT 0>
+	<cfset Variables.encoding = "x-gzip">
+<cfelse>
+	<cfset Variables.encoding = "">
+</cfif>
+
+<!--- Is northon antivirus header --->
+<cfif StructKeyExists(CGI, "---------------")>
+	<cfset Variables.encoding = "x-gzip">
+</cfif>
+
+<cfset Variables.supportsGzip = Variables.Settings.compress AND Len(Variables.encoding) GT 0>
+
+<!--- UTC time --->
+<cfset Variables.NowUTC = DateConvert("local2Utc", now())>
+<cfset Variables.ExpiresDate = dateAdd('s', Variables.expiresOffset, Variables.NowUTC)>
+
 <!--- HEADERS --->
 <cfheader name="Content-type" value="text/javascript">
 <cfheader name="Vary" value="Accept-Encoding">  <!--- HANDLE PROXIES --->
-<cfheader name="Expires" value="#dateFormat(dateAdd('d', 7, now()), "dddd, dd mmm yyyy")# #timeFormat(now(), "hh:mm:ss")# GMT">
-
-<!--- DEFAULT INPUTS --->
-<cfparam name="url.diskCache" default="true">
-<cfparam name="url.js" default="true">
-<cfparam name="url.compress" default="true">
-<cfparam name="url.core" default="true">
-<cfparam name="url.suffix" default="">
-
-<!--- GET INPUTS --->
-<cfset plugins = listToArray(url.plugins)>
-<cfset languages = listToArray(url.languages)>
-<cfset themes = listToArray(url.themes)>
-<cfset diskCache = url.diskcache>
-<cfset isJS = url.js>
-<cfset compress = url.compress>
-<cfset core = url.core>
-<cfset suffix = url.suffix>
-<cfset cachePath = expandPath(".\tiny_mce_gzip_cache\")>
-<cfset expiresOffset = createTimeSpan(10,0,0,0)> <!--- Cache for 10 days in browser cache --->
-<cfset content = "">
-<cfset encodings = arrayNew(2)>
-<cfset supportsGzip = false>
-<cfset enc = "">
-<cfset cacheKey = "">
-
-<!--- COMPRESS OVERRIDE --->
-<cfif cgi.HTTP_ACCEPT_ENCODING does not contain "gzip">
-	<cfset compress = 0>
+<cfheader name="Expires" value="#dateFormat(Variables.ExpiresDate, "dddd, dd mmm yyyy")# #timeFormat(Variables.ExpiresDate, "hh:mm:ss")# GMT">
+<cfheader name="Cache-Control" value="public, max-age=#Variables.expiresOffset#">
+<cfif Variables.supportsGzip EQ true>
+	<cfheader name="Content-Encoding" value="#Variables.encoding#">
 </cfif>
 
-<!--- CUSTOM EXTRA JAVASCRIPTS TO PACK --->
-<cfset custom = arrayNew(2)>
-<!---
-<cfset custom[1] = "some custom .js file">
-<cfset custom[2] = "some custom .js file">
---->
-
 <!--- IF CALLED DIRECTLY THEN AUTO INIT WITH DEFAULT SETTINGS --->
-<cfif isJS eq 0>
-	<cfoutput>#getFileContents("tiny_mce_gzip.js")# tinyMCE_GZ.init({});</cfoutput>
+<cfif Variables.Settings.js EQ false>
+	<cfoutput>#getFileContents(expandpath("tiny_mce_gzip.js"))# tinyMCE_GZ.init({});</cfoutput>
 	<cfabort>
 </cfif>
 
-<!--- MAKE SURE THE CACHE DIR EXISTS --->
-<!--- WE ALSO USE IT FOR THE TEMP JS->GZ OPERATION --->
-<cfif not directoryExists(cachePath)>
-	<cfdirectory action="create" directory="#cachePath#">
+<!---
+  --- Get full list of files
+  --->
+<cfset Variables.aScripts = ArrayNew(1)>
+
+<!--- ADD CORE LANGUAGES --->
+<cfloop from="1" to="#arrayLen(Variables.data.languages)#" index="CurrentIndex">
+	<cfset ArrayAppend(Variables.aScripts,  "langs/" & Variables.data.languages[CurrentIndex])>
+</cfloop>
+
+<!--- ADD THEMES --->
+<cfloop from="1" to="#arrayLen(Variables.data.themes)#" index="CurrentIndex">
+	<cfset ArrayAppend(Variables.aScripts,  "themes/" & Variables.data.themes[CurrentIndex] & "/editor_template" & Variables.Settings.suffix)>
+
+	<cfloop from="1" to="#arrayLen(Variables.data.languages)#" index="CurrentSubIndex">
+		<cfset ArrayAppend(Variables.aScripts,  "themes/" & Variables.data.themes[CurrentIndex] & "/langs/" & Variables.data.languages[CurrentSubIndex])>
+	</cfloop>
+</cfloop>
+
+<!--- ADD PLUGINS --->
+<cfloop from="1" to="#arrayLen(Variables.data.plugins)#" index="CurrentIndex">
+	<cfset ArrayAppend(Variables.aScripts,  "plugins/" & Variables.data.plugins[CurrentIndex] & "/editor_plugin" & Variables.Settings.suffix)>
+
+	<cfloop from="1" to="#arrayLen(Variables.data.languages)#" index="CurrentSubIndex">
+		<cfset ArrayAppend(Variables.aScripts,  "plugins/" & Variables.data.plugins[CurrentIndex] & "/langs/" & Variables.data.languages[CurrentSubIndex])>
+	</cfloop>
+</cfloop>
+
+<!--- Sort array to elimiate duplicates casused by varying order --->
+<cfset ArraySort(Variables.aScripts, "textnocase")>
+
+<!--- ADD CORE - Must always be fist --->
+<cfif Variables.Settings.core EQ true>
+	<cfset ArrayPrepend(Variables.aScripts,  "tiny_mce" & Variables.Settings.suffix)>
 </cfif>
 
-<!--- SETUP CACHE INFO --->
-<cfif diskCache eq 1>
-	<cfset cacheKey = cacheKey & url.plugins & url.languages & url.themes & suffix>	
-	<cfloop from="1" to="#arrayLen(custom)#" index="a">
-		<cfset cacheKey = cacheKey & custom[a]>
-	</cfloop>
-	<cfset cacheKey = hash(cacheKey, "md5")>
-	<cfset fileBase = cachePath & cacheKey>
-	<cfset fileJS = fileBase & ".js">	
-	<cfif compress eq 1>
-		<cfset fileGZ = fileJS & ".gz">
-		<cfif not fileExists(fileGZ)>
-			<cfset makeJS(file=fileJS)>
-			<cfset makeGZ(fileJS=fileJS)>
-		</cfif>
-		<cfset serveGZ(file=fileGZ)>
+<!--- ADD CUSTOM FILES - Should be in the order specified in the config --->
+<cfloop from="1" to="#arrayLen(Variables.data.files)#" index="CurrentIndex">
+	<cfset ArrayAppend(Variables.aScripts,  Variables.data.files[CurrentIndex])>
+</cfloop>
+
+
+<!--- Correct the extensions --->
+<cfset Variables.ThisDirectory = ExpandPath("./")>
+<cfloop from="1" to="#arrayLen(Variables.aScripts)#" index="CurrentIndex">
+	<cfset Variables.ThisFile = Variables.aScripts[Variables.CurrentIndex]>
+
+	<cfif Variables.Settings.Source AND FileExists(Variables.ThisDirectory & Variables.ThisFile & "_src.js")>
+		<cfset Variables.ThisFile = Variables.ThisFile & "_src.js">
+	<cfelseif FileExists(Variables.ThisDirectory & Variables.ThisFile & ".js")>
+		<cfset Variables.ThisFile = Variables.ThisFile & ".js">
 	<cfelse>
-		<cfif not fileExists(fileJS)>
-			<cfset makeJS(file=fileJS)>
-		</cfif>
-		<cfset serveJS(file=fileJS)>
+		<cfset Variables.ThisFile = "">
 	</cfif>
+
+	<cfset Variables.aScripts[Variables.CurrentIndex] = Variables.ThisFile>
+</cfloop>
+
+<cfset Variables.ScriptList = ArrayToList(Variables.aScripts)>
+
+
+<!---
+  --- Cache related
+  --->
+<cfif Variables.Settings.disk_cache EQ true>
+
+	<!--- MAKE SURE THE CACHE DIR EXISTS --->
+	<cfif directoryExists(Variables.Settings.cache_dir) EQ false>
+		<cfdirectory action="create" directory="#Variables.Settings.cache_dir#">
+	</cfif>
+
+	<!--- Get cache count --->
+	<cfdirectory action="list" directory="#Variables.Settings.cache_dir#" name="qryFiles" listinfo="name" recurse="false" type="file">
+
+	<!---
+		// Only put file in cache if the number of cached files is less
+		// than the set max files this will reduce a possible DOS attack
+	 --->
+	 <cfif qryFiles.RecordCount LT Variables.Settings.max_cache>
+		<cfset Variables.save_cache = true>
+	 </cfif>
+
+</cfif>
+
+<!---
+  --- SETUP CACHE INFO - Used for locking as well as cache
+  --->
+<cfset Variables.cacheKey = hash(Variables.ScriptList & Variables.Settings.suffix & '@' & Variables.LoadedFromBase, "md5")>
+
+<cfset Variables.fileBase = Variables.Settings.cache_dir & Variables.cacheKey>
+<cfset Variables.fileJS = Variables.fileBase & ".js">
+<cfset Variables.fileGZ = Variables.fileJS & ".gz">
+<cfset Variables.lockJS = "JS" & Hash(Variables.fileJS, "SHA")>
+<cfset Variables.lockGZ = "GZ" & Hash(Variables.fileGZ, "SHA")>
+
+<!--- Get JS content --->
+<cflock name="#Variables.lockJS#" type="readonly" timeout="4">
+	<cfif Variables.Settings.disk_cache EQ true AND fileExists(Variables.fileJS) EQ true>
+		<cfset Variables.contentJS = getFileContents(Variables.fileJS)>
+	<cfelse>
+
+		<!--- // Set base URL for where tinymce is loaded from --->
+		<cfset Variables.contentJS = "var tinyMCEPreInit={base:'" & Variables.LoadedFromBase & "',suffix:''};">
+
+		<!--- Get file contents --->
+		<cfloop from="1" to="#arrayLen(Variables.aScripts)#" index="CurrentIndex">
+			<cfset Variables.contentJS = Variables.contentJS & getFileContents(Variables.ThisDirectory & Variables.aScripts[CurrentIndex])>
+		</cfloop>
+
+		<!--- // Mark all themes, plugins and languages as done --->
+		<cfset Variables.contentJS = Variables.contentJS & 'tinymce.each("' & Variables.ScriptList & '".split(","),function(f){tinymce.ScriptLoader.markDone(tinyMCE.baseURL+"/"+f+".js");});'>
+
+	</cfif>
+</cflock>
+
+<!--- Save JS content --->
+<cfif Variables.save_cache EQ true AND fileExists(Variables.fileJS) EQ false>
+	<cflock name="#Variables.lockJS#" type="exclusive" timeout="4">
+		<cfset saveFile(file=Variables.fileJS, content=Variables.contentJS)>
+	</cflock>
+</cfif>
+
+
+<cfif Variables.supportsGzip EQ true>
+	<!--- Get GZ content --->
+	<cflock name="#Variables.lockGZ#" type="readonly" timeout="4">
+		<cfif Variables.Settings.disk_cache EQ true AND fileExists(Variables.fileGZ) EQ true>
+			<cfset Variables.contentGZ = getFileContentsBinary(Variables.fileGZ)>
+		<cfelse>
+			<cfset Variables.contentGZ = makeGZ(content=Variables.contentJS)>
+		</cfif>
+	</cflock>
+
+	<!--- Save GZ content --->
+	<cfif Variables.save_cache EQ true AND fileExists(Variables.fileGZ) EQ false>
+		<cflock name="#Variables.lockGZ#" type="exclusive" timeout="4">
+			<cfset saveFileBinary(file=Variables.fileGZ, content=Variables.contentGZ)>
+		</cflock>
+	</cfif>
+</cfif>
+
+<!--- Serve the content --->
+<cfif Variables.supportsGzip EQ false>
+	<cfset serveContent(content=ToBinary(ToBase64(Variables.contentJS)))>
 <cfelse>
-	<cfset fileBase = cachePath>
-	<cfset fileJS = fileBase & "temp.js">
-	<cfset makeJS(file=fileJS)>
-	<cfif compress eq 1>
-		<cfset fileGZ = fileBase & "temp.js.gz">
-		<cfset makeGZ(fileJS=fileJS)>
-		<!--- CANNOT DO MORE WORK AFTER CFCONTENT, SO DELETE THE TEMP JS NOW --->
-		<cfset del = deleteFile(file=fileJS)>
-		<cfset serveGZ(file=fileGZ, delete=1)>
-	<cfelse>
-		<cfset serveJS(file=fileJS, delete=1)>
-	</cfif>
+	<cfset serveContent(content=Variables.contentGZ)>
 </cfif>
 
 
-<cffunction name="makeJS">
-	<cfargument name="file" required="true" >
-	
-	<!--- ADD CORE --->
-	<cfif core eq true>
-		<cfset content = content & getFileContents("tiny_mce" & suffix & ".js")>
-	
-		<!--- PATCH LOADING FUNCTIONS --->
-		<cfset content = content & "tinyMCE_GZ.start();">
-	</cfif>
-	
-	<!--- ADD CORE LANGUAGES --->
-	<cfloop from="1" to="#arrayLen(languages)#" index="l">
-		<cfset content = content & getFileContents("langs/" & languages[l] & ".js")>
-	</cfloop>
-	
-	<!--- ADD THEMES --->
-	<cfloop from="1" to="#arrayLen(themes)#" index="t">
-		<cfset content = content & getFileContents( "themes/" & themes[t] & "/editor_template" & suffix & ".js")>
-	
-		<cfloop from="1" to="#arrayLen(languages)#" index="l">
-			<cfset content = content & getFileContents("themes/" & themes[t] & "/langs/" & languages[l] & ".js")>
-		</cfloop>
-	</cfloop>
-	
-	<!--- ADD PLUGINS --->
-	<cfloop from="1" to="#arrayLen(plugins)#" index="p">
-		<cfset content = content & getFileContents("plugins/" & plugins[p] & "/editor_plugin" & suffix & ".js")>
-	
-		<cfloop from="1" to="#arrayLen(languages)#" index="l">
-			<cfset content = content & getFileContents("plugins/" & plugins[p] & "/langs/" & languages[l] & ".js")>
-		</cfloop>
-	</cfloop>
-	
-	<!--- ADD CUSTOM FILES --->
-	<cfloop from="1" to="#arrayLen(custom)#" index="c">
-		<cfset content = content & getFileContents(custom[c])>
-	</cfloop>
-	
-	<!--- RESTORE LOADING FUNCTIONS --->
-	<cfif core eq true>
-		<cfset content = content & "tinyMCE_GZ.end();">
-	</cfif>
-	
-<!--- HOW BIG IS THE UNCOMPRESSED JS? --->
-<cfsavecontent variable="heading"><cfoutput>
-#credits#
-//  This uncompressed concatenated JS: #numberformat((content.length() + credits.length())/1024, .00)# KB
-//  --------------------------------------------------------------------
 
-</cfoutput></cfsavecontent>
-	<cfset content = heading & content>
-	
-	<!--- WRITE THE JS FILE --->
-	<cffile action="write" output="#content#" charset="ISO-8859-1" file="#arguments.file#">
-</cffunction>
+<!---
+	Functions
+ --->
 
+<cffunction name="makeGZ" output="false" hint="Returns content gziped.">
+	<cfargument name="content" required="true" >
 
-<cffunction name="serveJS">
-	<cfargument name="file" required="true" >
-	<cfargument name="delete" default="0" >
-	
-	<cfcontent file="#arguments.file#" deleteFile="#arguments.delete#" type="text/javascript; charset=ISO-8859-1">
-</cffunction>
-
-
-<cffunction name="makeGZ">
-	<cfargument name="fileJS" required="true" >
-	
 	<cfscript>
 
 		/* Create Objects */
-		ioInput     = CreateObject("java","java.io.FileInputStream");
-		ioOutput    = CreateObject("java","java.io.FileOutputStream");
-		gzOutput    = CreateObject("java","java.util.zip.GZIPOutputStream");
+		var ioOutput = CreateObject("java","java.io.ByteArrayOutputStream");
+		var gzOutput = CreateObject("java","java.util.zip.GZIPOutputStream");
 
-		/* Set Variables */
-		this.os = Server.OS.Name;
+		ioOutput.init();
+		gzOutput.init(ioOutput);
 
-		if(FindNoCase("Windows", this.os)) this.slash = "\";
-		else                               this.slash = "/";
+		gzOutput.write(content.getBytes(), 0, Len(content.getBytes()));
 
-		/* Default variables */
-		l = 0;
-		buffer     = RepeatString(" ",1024).getBytes();
-		gzFileName = "";
-		outputFile = "";
-
-		/* Convert to the right path format */
-		arguments.gzipFilePath = PathFormat(cachePath);
-		arguments.filePath     = PathFormat(arguments.fileJS);
-
-		/* Check if the 'extractPath' string is closed */
-		lastChr = Right(arguments.gzipFilePath, 1);
-
-		/* Set an slash at the end of string */
-		if(lastChr NEQ this.slash)
-			arguments.gzipFilePath = arguments.gzipFilePath & this.slash;
-
-		try
-		{
-
-			/* Set output gzip file name */
-			gzFileName = getFileFromPath(arguments.filePath) & ".gz";
-			outputFile = arguments.gzipFilePath & gzFileName;
-
-			ioInput.init(arguments.filePath);
-			ioOutput.init(outputFile);
-			gzOutput.init(ioOutput);
-
-			l = ioInput.read(buffer);
-			
-			while(l GT 0)
-			{
-				gzOutput.write(buffer, 0, l);
-				l = ioInput.read(buffer);
-			}
-
-			/* Close the GZip file */
-			gzOutput.close();
-			ioOutput.close();
-			ioInput.close();
-
-			/* Return true */
-			return true;
-		}
-
-		catch(Any expr)
-		{ return false; }
-
+		gzOutput.finish();
+		gzOutput.close();
+		ioOutput.flush();
+		ioOutput.close();
 	</cfscript>
 
+	<cfreturn ioOutput.toByteArray()>
+
 </cffunction>
 
 
-<cffunction name="PathFormat" access="private" output="no" returntype="string" hint="Convert path into Windows or Unix format.">
-	<cfargument name="path" required="yes" type="string" hint="The path to convert.">
+<cffunction name="serveContent" output="false">
+	<cfargument name="content" required="true" type="binary">
 
-	<cfif FindNoCase("Windows", this.os)>
-		<cfset arguments.path = Replace(arguments.path, "/", "\", "ALL")>
-	<cfelse>
-		<cfset arguments.path = Replace(arguments.path, "\", "/", "ALL")>
-	</cfif>
-
-	<cfreturn arguments.path>
+	<cfcontent variable="#arguments.content#">
 </cffunction>
 
 
-<cffunction name="serveGZ">
+<cffunction name="saveFile" output="false" returntype="void">
+	<cfargument name="file" required="true">
+	<cfargument name="content" required="true">
+
+	<cffile action="write" output="#Arguments.content#" charset="iso-8859-1" file="#arguments.file#" >
+</cffunction>
+
+<cffunction name="saveFileBinary" output="false" returntype="void">
+	<cfargument name="file" required="true">
+	<cfargument name="content" required="true">
+
+	<cffile action="write" output="#Arguments.content#" file="#arguments.file#" >
+</cffunction>
+
+
+<cffunction name="deleteFile" output="false" returntype="void" hint="deletes a file.">
 	<cfargument name="file" required="true" >
-	<cfargument name="delete" default="0" >
-	
-	<cfheader name="Content-Encoding" value="gzip">
-	<cfcontent file="#arguments.file#" deleteFile="#arguments.delete#" type="text/javascript; charset=ISO-8859-1">
-</cffunction>
 
-
-<cffunction name="deleteFile">
-	<cfargument name="file" required="true" >
-	
 	<cftry>
 		<cffile action="delete" file="#arguments.file#">
 		<cfcatch></cfcatch>
@@ -279,13 +327,89 @@
 </cffunction>
 
 
-<cffunction name="getFileContents">
+<cffunction name="getFileContents" output="false" returntype="string" hint="Gets the contents of a file">
 	<cfargument name="path">
-	
-	<cfif not directoryExists(expandPath("#arguments.path#")) AND not fileExists(expandPath("#arguments.path#"))>
-		<cfreturn "">
-	</cfif>
-	
-	<cffile action="read" file="#expandpath('#arguments.path#')#" variable="content">
+
+	<cfset var content = "">
+
+	<cftry>
+		<cffile action="read" file="#arguments.path#" variable="content">
+
+		<cfcatch></cfcatch>
+	</cftry>
+
 	<cfreturn content>
+</cffunction>
+
+<cffunction name="getFileContentsBinary" output="false" returntype="binary" hint="Gets the contents of a file">
+	<cfargument name="path">
+
+	<cfset var content = "">
+
+	<cftry>
+		<cffile action="readbinary" file="#arguments.path#" variable="content">
+
+		<cfcatch></cfcatch>
+	</cftry>
+
+	<cfreturn content>
+</cffunction>
+
+<!---
+	/**
+	 * Returns a sanitized query string parameter.
+	 *
+	 * @param String $name Name of the query string param to get.
+	 * @param String $default Default value if the query string item shouldn't exist.
+	 * @return String Sanitized query string parameter value.
+	 */
+ --->
+<cffunction name="getParam" output="false" returntype="string" hint="Returns a sanitized query string parameter.">
+	<cfargument name="name" required="true">
+	<cfargument name="default" required="false" default="">
+
+	<cfscript>
+		var result = Arguments.default;
+
+		if (StructKeyExists(URL, Arguments.Name) EQ true) {
+			result = REReplaceNoCase(URL[Arguments.Name], "[^0-9a-z\-_,]+", "", "ALL");  // Sanatize for security, remove anything but 0-9,a-z,-_,
+		}
+	</cfscript>
+
+	<cfreturn result>
+</cffunction>
+
+<!---
+	/**
+	 * Parses the specified time format into seconds. Supports formats like 10h, 10d, 10m.
+	 *
+	 * @param String $time Time format to convert into seconds.
+	 * @return Int Number of seconds for the specified format.
+	 */
+--->
+<cffunction name="parseTime" output="false" returntype="numeric" hint="Parses the specified time format into seconds.">
+	<cfargument name="time" required="true">
+
+	<cfscript>
+		var multipel = 1;
+		var result = 0;
+
+		// Hours
+		if (Find(Arguments.time, "h") > 0)
+			multipel = 3600;
+
+		// Days
+		if (Find(Arguments.time, "d") > 0)
+			multipel = 86400;
+
+		// Months
+		if (Find(Arguments.time, "m") > 0)
+			multipel = 2592000;
+
+		// Trim string
+		result = int(val(Arguments.time)) * multipel;
+	</cfscript>
+
+	<cfreturn result>
+
 </cffunction>
