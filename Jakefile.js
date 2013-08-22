@@ -19,7 +19,8 @@ task("release", [], function () {
 
 			from: [
 				"tinymce.gzip.js",
-				page
+				page,
+				["tools/readme.installation.txt", "readme.txt"]
 			],
 
 			dataFilter: function(args) {
