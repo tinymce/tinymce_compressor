@@ -19,6 +19,7 @@ task("release", [], function () {
 
 			from: [
 				"tinymce.gzip.js",
+				["changelog_" + suffix + ".txt", "changelog.txt"],
 				page,
 				["tools/readme.installation.txt", "readme.txt"]
 			],
@@ -48,6 +49,6 @@ task("release", [], function () {
 	createPackage("tinymce.gzip.php", "php");
 	createPackage("tinymce.gzip.ashx", "net");
 	createPackage("tinymce.gzip.jsp", "jsp");
-	createPackage("tinymce.gzip.cfm", "cfm");
+	createPackage("tinymce.gzip.cfm", "cf");
 	createPackage("tinymce.gzip.pl", "perl");
 });
