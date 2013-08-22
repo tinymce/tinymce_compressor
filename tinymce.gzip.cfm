@@ -130,7 +130,7 @@
 	
 	<!--- ADD THEMES --->
 	<cfloop from="1" to="#arrayLen(themes)#" index="t">
-		<cfset content = content & getFileContents( "themes/" & themes[t] & "/editor_template" & suffix & ".js")>
+		<cfset content = content & getFileContents( "themes/" & themes[t] & "/theme" & suffix & ".js")>
 	
 		<cfloop from="1" to="#arrayLen(languages)#" index="l">
 			<cfset content = content & getFileContents("themes/" & themes[t] & "/langs/" & languages[l] & ".js")>
@@ -139,7 +139,7 @@
 	
 	<!--- ADD PLUGINS --->
 	<cfloop from="1" to="#arrayLen(plugins)#" index="p">
-		<cfset content = content & getFileContents("plugins/" & plugins[p] & "/editor_plugin" & suffix & ".js")>
+		<cfset content = content & getFileContents("plugins/" & plugins[p] & "/plugin" & suffix & ".js")>
 	
 		<cfloop from="1" to="#arrayLen(languages)#" index="l">
 			<cfset content = content & getFileContents("plugins/" & plugins[p] & "/langs/" & languages[l] & ".js")>

@@ -111,7 +111,7 @@
 
 	// Add themes
 	for (i=0; i<themes.length; i++) {
-		content += getFileContents(mapPath(request, "themes/" + themes[i] + "/editor_template" + suffix + ".js"));
+		content += getFileContents(mapPath(request, "themes/" + themes[i] + "/theme" + suffix + ".js"));
 
 		for (x=0; x<languages.length; x++)
 			content += getFileContents(mapPath(request, "themes/" + themes[i] + "/langs/" + languages[x] + ".js"));
@@ -119,7 +119,7 @@
 
 	// Add plugins
 	for (i=0; i<plugins.length; i++) {
-		content += getFileContents(mapPath(request, "plugins/" + plugins[i] + "/editor_plugin" + suffix + ".js"));
+		content += getFileContents(mapPath(request, "plugins/" + plugins[i] + "/plugin" + suffix + ".js"));
 
 		for (x=0; x<languages.length; x++)
 			content += getFileContents(mapPath(request, "plugins/" + plugins[i] + "/langs/" + languages[x] + ".js"));

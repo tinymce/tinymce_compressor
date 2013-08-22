@@ -1,0 +1,14 @@
+{
+	"name": "tinymce_compressor",
+	"version": "4.0.0",
+	"description": "TinyMCE Gzip compressor",
+	"author": "Johan Sörlin <spocke@moxiecode.com>",
+	"bugs": { "url" : "http://www.tinymce.com/develop/bugtracker.php" },
+	"engines": {
+		"node" : ">=0.8.0"
+	},
+	"dependencies": {
+		"uglify-js": ">= 2.0.0",
+		"moxie-zip": ">= 0.0.1"
+	}
+}

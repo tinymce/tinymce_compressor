@@ -1,8 +1,8 @@
 <%@ WebHandler Language="C#" Class="Handler" %>
 /**
- * tiny_mce_gzip.ashx
+ * tinymce.gzip.ashx
  *
- * Copyright 2011, Moxiecode Systems AB
+ * Copyright, Moxiecode Systems AB
  * Released under LGPL License.
  *
  * License: http://tinymce.moxiecode.com/license
@@ -59,7 +59,7 @@ public class Handler : IHttpHandler {
 		isJS = GetParam("js", "") == "true";
 		compress = GetParam("compress", "true") == "true";
 		core = GetParam("core", "true") == "true";
-		suffix = GetParam("suffix", "") == "_src" ? "_src" : "";
+		suffix = GetParam("suffix", "min");
 		cachePath = Server.MapPath("."); // Cache path, this is where the .gz files will be stored
 		expiresOffset = 10; // Cache for 10 days in browser cache
 
@@ -87,13 +87,6 @@ public class Handler : IHttpHandler {
 		Response.Cache.VaryByParams["lang"] = true;
 		Response.Cache.VaryByParams["index"] = true;
 
-		// Is called directly then auto init with default settings
-		if (!isJS) {
-			Response.WriteFile(Server.MapPath("tiny_mce_gzip.js"));
-			Response.Write("tinyMCE_GZ.init({});");
-			return;
-		}
-
 		// Setup cache info
 		if (diskCache) {
 			cacheKey = GetParam("plugins", "") + GetParam("languages", "") + GetParam("themes", "");
@@ -104,9 +97,9 @@ public class Handler : IHttpHandler {
 			cacheKey = MD5(cacheKey);
 
 			if (compress)
-				cacheFile = cachePath + "/tiny_mce_" + cacheKey + ".gz";
+				cacheFile = cachePath + "/tinymce.gzip-" + cacheKey + ".gz";
 			else
-				cacheFile = cachePath + "/tiny_mce_" + cacheKey + ".js";
+				cacheFile = cachePath + "/tinymce.gzip-" + cacheKey + ".js";
 		}
 
 		// Check if it supports gzip
@@ -123,10 +116,7 @@ public class Handler : IHttpHandler {
 
 		// Add core
 		if (core) {
-			content += GetFileContents("tiny_mce" + suffix + ".js");
-
-			// Patch loading functions
-			content += "tinyMCE_GZ.start();";
+			content += GetFileContents("tinymce." + suffix + ".js");
 		}
 
 		// Add core languages
@@ -135,7 +125,7 @@ public class Handler : IHttpHandler {
 
 		// Add themes
 		for (i = 0; i < themes.Length; i++) {
-			content += GetFileContents("themes/" + themes[i] + "/editor_template" + suffix + ".js");
+			content += GetFileContents("themes/" + themes[i] + "/theme." + suffix + ".js");
 
 			for (x = 0; x < languages.Length; x++)
 				content += GetFileContents("themes/" + themes[i] + "/langs/" + languages[x] + ".js");
@@ -143,7 +133,7 @@ public class Handler : IHttpHandler {
 
 		// Add plugins
 		for (i = 0; i < plugins.Length; i++) {
-			content += GetFileContents("plugins/" + plugins[i] + "/editor_plugin" + suffix + ".js");
+			content += GetFileContents("plugins/" + plugins[i] + "/plugin." + suffix + ".js");
 
 			for (x = 0; x < languages.Length; x++)
 				content += GetFileContents("plugins/" + plugins[i] + "/langs/" + languages[x] + ".js");
@@ -152,10 +142,6 @@ public class Handler : IHttpHandler {
 		// Add custom files
 		for (i = 0; i < custom.Length; i++)
 			content += GetFileContents(custom[i]);
-
-		// Restore loading functions
-		if (core)
-			content += "tinyMCE_GZ.end();";
 
 		// Generate GZIP'd content
 		if (supportsGzip) {
