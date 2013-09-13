@@ -30,7 +30,7 @@
 		// Seems that onreadystatechange works better on IE 10 onload seems to fire incorrectly
 		if ("onreadystatechange" in elm) {
 			elm.onreadystatechange = function() {
-				if (elm.readyState == "loaded") {
+				if (elm.readyState == "loaded" || elm.readyState == "complete") {
 					done();
 				}
 			};
