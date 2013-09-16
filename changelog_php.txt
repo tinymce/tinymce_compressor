@@ -1,2 +1,4 @@
+Version 4.0.1 (2013-09-xx)
+	Fixed bug where IE wouldn't properly init TinyMCE when loaded from cache.
 Version 4.0 (2013-08-22)
 	Added new rewritten compressor for TinyMCE 4.0. It's now a simple drop in replacement.
