@@ -2,7 +2,7 @@
 	var tinymce, loaded = {}, urls = [], callbacks = [], loading, realInit;
 
 	function loadScript(url, callback) {
-		var elm;
+		var elm, head = document.getElementsByTagName('head')[0] || document.body;
 
 		// Execute callback when script is loaded
 		function done() {
@@ -25,24 +25,26 @@
 		// Create new script element
 		elm = document.createElement('script');
 		elm.type = 'text/javascript';
-		elm.src = url;
 
-		// Seems that onreadystatechange works better on IE 10 onload seems to fire incorrectly
-		if ("onreadystatechange" in elm) {
+		// Use modern onload event when it's available
+		if ("onload" in elm) {
+			elm.onload = done;
+			head.appendChild(elm);
+
+			// Add src after appending it to the document seems to work better on IE 10
+			elm.src = url;
+		} else {
 			elm.onreadystatechange = function() {
-				if (elm.readyState == "loaded" || elm.readyState == "complete") {
+				if (elm.src && /loaded|complete/.test(elm.readyState)) {
 					done();
 				}
 			};
-		} else {
-			elm.onload = done;
+
+			elm.src = url;
+			head.appendChild(elm);
 		}
 
-		// Add onerror event will get fired on some browsers but not all of them
 		elm.onerror = error;
-
-		// Add script to document
-		(document.getElementsByTagName('head')[0] || document.body).appendChild(elm);
 	}
 
 	function buildUrl(themes, plugins, languages) {
