@@ -133,7 +133,9 @@
 		urls.push(buildUrl(themes, plugins, languages));
 
 		callbacks.push(function() {
-			window.tinymce.dom.Event.domLoaded = 1;
+			if (/complete|interactive/.test(document.readyState)) {
+				window.tinymce.dom.Event.domLoaded = true;
+			}
 
 			if (window.tinymce.init != init) {
 				realInit = window.tinymce.init;
