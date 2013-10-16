@@ -96,7 +96,7 @@ class TinyMCE_Compressor {
 			$this->settings["plugins"] = $plugins;
 		}
 
-		$plugins = explode(',', $this->settings["plugins"]);
+		$plugins = preg_split('/,/', $this->settings["plugins"], -1, PREG_SPLIT_NO_EMPTY);
 
 		// Themes
 		$themes = self::getParam("themes");
@@ -104,7 +104,7 @@ class TinyMCE_Compressor {
 			$this->settings["themes"] = $themes;
 		}
 
-		$themes = explode(',', $this->settings["themes"]);
+		$themes = preg_split('/,/', $this->settings["themes"], -1, PREG_SPLIT_NO_EMPTY);
 
 		// Languages
 		$languages = self::getParam("languages");
@@ -112,7 +112,7 @@ class TinyMCE_Compressor {
 			$this->settings["languages"] = $languages;
 		}
 
-		$languages = explode(',', $this->settings["languages"]);
+		$languages = preg_split('/,/', $this->settings["languages"], -1, PREG_SPLIT_NO_EMPTY);
 
 		// Files
 		$tagFiles = self::getParam("files");
@@ -139,29 +139,29 @@ class TinyMCE_Compressor {
 
 		// Add core languages
 		foreach ($languages as $language) {
-			$files[] = "langs/$language";
+			$files[] = "langs/" . $language;
 		}
 
 		// Add plugins
 		foreach ($plugins as $plugin) {
-			$files[] = "plugins/$plugin/plugin";
+			$files[] = "plugins/" . $plugin . "/plugin";
 
 			foreach ($languages as $language) {
-				$files[] = "plugins/$plugin/langs/$language";
+				$files[] = "plugins/" . $plugin . "/langs/" . $language;
 			}
 		}
 
 		// Add themes
 		foreach ($themes as $theme) {
-			$files[] = "themes/$theme/theme";
+			$files[] = "themes/" . $theme . "/theme";
 
 			foreach ($languages as $language) {
-				$files[] = "themes/$theme/langs/$language";
+				$files[] = "themes/" . $theme . "/langs/" . $language;
 			}
 		}
 
 		// Add any specified files.
-		$allFiles = array_merge($files, explode(',', $this->settings['files']));
+		$allFiles = array_merge($files, preg_split('/,/', $this->settings['files'], -1, PREG_SPLIT_NO_EMPTY));
 
 		// Process source files
 		for ($i = 0; $i < count($allFiles); $i++) {
@@ -169,7 +169,7 @@ class TinyMCE_Compressor {
 
 			if ($this->settings["source"] && file_exists($file . ".js")) {
 				$file .= ".js";
-			} else if (file_exists($file . ".js"))  {
+			} else if (file_exists($file . ".min.js"))  {
 				$file .= ".min.js";
 			} else {
 				$file = "";
