@@ -7,13 +7,13 @@ desc("Default build task");
 task("default", ["release"], function () {});
 
 task("release", [], function () {
-	var details = getReleaseDetails("changelog_php.txt");
-
 	if (!fs.existsSync("tmp")) {
 		fs.mkdirSync("tmp");
 	}
 
 	function createPackage(page, suffix) {
+		var details = getReleaseDetails("changelog_" + suffix + ".txt");
+
 		zip({
 			baseDir: "tinymce_compressor",
 
