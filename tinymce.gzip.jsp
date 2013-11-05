@@ -1,9 +1,9 @@
-<%@page import="java.io.*,java.util.zip.*" %>
+<%@page import="java.io.*,java.util.zip.*,java.net.URI" %>
 <%
 /**
- * tiny_mce_gzip.jsp
+ * tinymce.gzip.jsp
  *
- * Copyright 2009, Moxiecode Systems AB
+ * Copyright, Moxiecode Systems AB
  * Released under LGPL License.
  *
  * License: http://tinymce.moxiecode.com/license
@@ -35,7 +35,7 @@
 	isJS = getParam(request, "js", "").equals("true");
 	compress = getParam(request, "compress", "true").equals("true");
 	core = getParam(request, "core", "true").equals("true");
-	suffix = getParam(request, "suffix", "").equals("_src") ? "_src" : "";
+	suffix = getParam(request, "suffix", "").length() == 0 ? ".min" : "";
 	cachePath = mapPath(request, "."); // Cache path, this is where the .gz files will be stored
 	expiresOffset = 3600 * 24 * 10; // Cache for 10 days in browser cache
 
@@ -53,7 +53,6 @@
 	// Is called directly then auto init with default settings
 	if (!isJS) {
 		out.print(getFileContents(mapPath(request, "tiny_mce_gzip.js")));
-		out.print("tinyMCE_GZ.init({});");
 		return;
 	}
 
@@ -61,15 +60,17 @@
 	if (diskCache) {
 		cacheKey = getParam(request, "plugins", "") + getParam(request, "languages", "") + getParam(request, "themes", "");
 
-		for (i=0; i<custom.length; i++)
+		for (i = 0; i < custom.length; i++) {
 			cacheKey += custom[i];
+		}
 
 		cacheKey = md5(cacheKey);
 
-		if (compress)
-			cacheFile = cachePath + File.separatorChar + "tiny_mce_" + cacheKey + ".gz";
-		else
-			cacheFile = cachePath + File.separatorChar + "tiny_mce_" + cacheKey + ".js";
+		if (compress) {
+			cacheFile = cachePath + File.separatorChar + "tinymce." + cacheKey + ".gz";
+		} else {
+			cacheFile = cachePath + File.separatorChar + "tinymce." + cacheKey + ".js";
+		}
 	}
 
 	// Check if it supports gzip
@@ -89,8 +90,9 @@
 		fin = new FileInputStream(cacheFile);
 		buff = new byte[1024];
 
-		while ((bytes = fin.read(buff, 0, buff.length)) != -1)
+		while ((bytes = fin.read(buff, 0, buff.length)) != -1) {
 			outStream.write(buff, 0, bytes);
+		}
 
 		fin.close();
 		outStream.close();
@@ -99,44 +101,46 @@
 
 	// Add core
 	if (core) {
-		content += getFileContents(mapPath(request, "tiny_mce" + suffix + ".js"));
-
-		// Patch loading functions
-		content += "tinyMCE_GZ.start();";
+		// Set base URL for where tinymce is loaded from
+		String uri = request.getRequestURI();
+		uri = uri.substring(0, uri.lastIndexOf('/'));
+		content += "var tinymce={base:'" + uri + "',suffix:'.min'};";
+		content += getFileContents(mapPath(request, "tinymce" + suffix + ".js"));
 	}
 
 	// Add core languages
-	for (x=0; x<languages.length; x++)
+	for (x = 0; x < languages.length; x++) {
 		content += getFileContents(mapPath(request, "langs/" + languages[x] + ".js"));
+	}
 
 	// Add themes
-	for (i=0; i<themes.length; i++) {
+	for (i = 0; i < themes.length; i++) {
 		content += getFileContents(mapPath(request, "themes/" + themes[i] + "/theme" + suffix + ".js"));
 
-		for (x=0; x<languages.length; x++)
+		for (x = 0; x < languages.length; x++) {
 			content += getFileContents(mapPath(request, "themes/" + themes[i] + "/langs/" + languages[x] + ".js"));
+		}
 	}
 
 	// Add plugins
-	for (i=0; i<plugins.length; i++) {
+	for (i = 0; i < plugins.length; i++) {
 		content += getFileContents(mapPath(request, "plugins/" + plugins[i] + "/plugin" + suffix + ".js"));
 
-		for (x=0; x<languages.length; x++)
+		for (x = 0; x < languages.length; x++) {
 			content += getFileContents(mapPath(request, "plugins/" + plugins[i] + "/langs/" + languages[x] + ".js"));
+		}
 	}
 
 	// Add custom files
-	for (i=0; i<custom.length; i++)
+	for (i = 0; i < custom.length; i++) {
 		content += getFileContents(mapPath(request, custom[i]));
-
-	// Restore loading functions
-	if (core)
-		content += "tinyMCE_GZ.end();";
+	}
 
 	// Generate GZIP'd content
 	if (supportsGzip) {
-		if (compress)
+		if (compress) {
 			response.addHeader("Content-Encoding", enc);
+		}
 
 		if (diskCache && cacheKey != "") {
 			bos = new ByteArrayOutputStream();
@@ -168,8 +172,9 @@
 			gzipStream.write(content.getBytes("iso-8859-1"));
 			gzipStream.close();
 		}
-	} else
+	} else {
 		out.write(content);
+	}
 %><%!
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -181,8 +186,9 @@
 
 	public String getFileContents(String path) {
 		try {
-			if (!new File(path).exists())
+			if (!new File(path).exists()) {
 				return "";
+			}
 
 			FileInputStream fis = new FileInputStream(path);
 			int x = fis.available();
@@ -213,17 +219,19 @@
 			char[] charArray = str.toCharArray();
 			byte[] byteArray = new byte[charArray.length];
 
-			for (int i=0; i<charArray.length; i++)
+			for (int i = 0; i < charArray.length; i++) {
 				byteArray[i] = (byte) charArray[i];
+			}
 
 			byte[] md5Bytes = md5.digest(byteArray);
 			StringBuffer hexValue = new StringBuffer();
 
-			for (int i=0; i<md5Bytes.length; i++) {
+			for (int i = 0; i < md5Bytes.length; i++) {
 				int val = ((int) md5Bytes[i] ) & 0xff;
 
-				if (val < 16)
+				if (val < 16) {
 					hexValue.append("0");
+				}
 
 				hexValue.append(Integer.toHexString(val));
 			}
