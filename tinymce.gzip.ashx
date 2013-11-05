@@ -59,7 +59,7 @@ public class Handler : IHttpHandler {
 		isJS = GetParam("js", "") == "true";
 		compress = GetParam("compress", "true") == "true";
 		core = GetParam("core", "true") == "true";
-		suffix = GetParam("suffix", "min");
+		suffix = GetParam("suffix", ".min");
 		cachePath = Server.MapPath("."); // Cache path, this is where the .gz files will be stored
 		expiresOffset = 10; // Cache for 10 days in browser cache
 
@@ -116,6 +116,10 @@ public class Handler : IHttpHandler {
 
 		// Add core
 		if (core) {
+			// Set base URL for where tinymce is loaded from
+			String uri = Request.Url.AbsolutePath;
+			uri = uri.Substring(0, uri.LastIndexOf('/'));
+			content += "var tinymce={base:'" + uri + "',suffix:'.min'};";
 			content += GetFileContents("tinymce." + suffix + ".js");
 		}
 
@@ -176,7 +180,7 @@ public class Handler : IHttpHandler {
 	}
 
 	private string GetParam(string name, string def) {
-		string value = Request.QueryString[name] != null ? "" + Request.QueryString[name] : def;
+		string value = !String.IsNullOrEmpty(Request.QueryString[name]) ? "" + Request.QueryString[name] : def;
 
 		return Regex.Replace(value, @"[^0-9a-zA-Z\\-_,]+", "");
 	}
