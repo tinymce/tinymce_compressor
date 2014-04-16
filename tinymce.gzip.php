@@ -96,7 +96,7 @@ class TinyMCE_Compressor {
 			$this->settings["plugins"] = $plugins;
 		}
 
-		$plugins = preg_split('/,/', $this->settings["plugins"], -1, PREG_SPLIT_NO_EMPTY);
+		$plugins = array_unique(preg_split('/,/', $this->settings["plugins"], -1, PREG_SPLIT_NO_EMPTY));
 
 		// Themes
 		$themes = self::getParam("themes");
@@ -104,7 +104,7 @@ class TinyMCE_Compressor {
 			$this->settings["themes"] = $themes;
 		}
 
-		$themes = preg_split('/,/', $this->settings["themes"], -1, PREG_SPLIT_NO_EMPTY);
+		$themes = array_unique(preg_split('/,/', $this->settings["themes"], -1, PREG_SPLIT_NO_EMPTY));
 
 		// Languages
 		$languages = self::getParam("languages");
@@ -112,7 +112,7 @@ class TinyMCE_Compressor {
 			$this->settings["languages"] = $languages;
 		}
 
-		$languages = preg_split('/,/', $this->settings["languages"], -1, PREG_SPLIT_NO_EMPTY);
+		$languages = array_unique(preg_split('/,/', $this->settings["languages"], -1, PREG_SPLIT_NO_EMPTY));
 
 		// Files
 		$tagFiles = self::getParam("files");
@@ -161,7 +161,7 @@ class TinyMCE_Compressor {
 		}
 
 		// Add any specified files.
-		$allFiles = array_merge($files, preg_split('/,/', $this->settings['files'], -1, PREG_SPLIT_NO_EMPTY));
+		$allFiles = array_merge($files, array_unique(preg_split('/,/', $this->settings['files'], -1, PREG_SPLIT_NO_EMPTY)));
 
 		// Process source files
 		for ($i = 0; $i < count($allFiles); $i++) {
